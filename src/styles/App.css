@@ -321,6 +321,31 @@ body {
   background: transparent !important;
 }
 
+.stop-btn {
+  color: #ef4444 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 4px !important;
+  height: auto !important;
+  width: auto !important;
+  min-width: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.stop-btn:hover {
+  color: #dc2626 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  transform: scale(1.1) !important;
+}
+
+.stop-btn:active {
+  transform: scale(0.95) !important;
+}
+
 /* 消息卡片 */
 .message-wrapper {
   display: flex;

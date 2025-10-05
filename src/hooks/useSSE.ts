@@ -429,6 +429,79 @@ export function useSSE() {
     setMessages(prev => [...prev, reportMessage]);
   }, []);
 
+  const handleCancelled = useCallback((data: any) => {
+    console.log('🛑 收到取消事件:', data);
+    setIsStreaming(false);
+    setIsConnected(false);
+    
+    // 更新最后一条未完成的消息状态，包括工具调用状态
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages];
+      
+      // 找到最后一条正在流式传输的 assistant 消息
+      for (let i = updatedMessages.length - 1; i >= 0; i--) {
+        const msg = updatedMessages[i];
+        if (msg.role === 'assistant' && msg.isStreaming && !msg.isCompleted) {
+          const now = new Date();
+          
+          // 更新 contentItems 中的工具调用状态
+          const updatedContentItems = msg.contentItems?.map(item => {
+            if (item.type === 'tool_call' && item.toolCall?.status === 'executing') {
+              return {
+                ...item,
+                toolCall: {
+                  ...item.toolCall,
+                  status: 'completed' as const,
+                  result: item.toolCall.result || '⚠️ 已取消',
+                  completedAt: now
+                }
+              };
+            }
+            return item;
+          });
+          
+          // 更新 toolCalls 数组中的工具调用状态
+          const updatedToolCalls = msg.toolCalls?.map(tool => {
+            if (tool.status === 'executing') {
+              return {
+                ...tool,
+                status: 'completed' as const,
+                result: tool.result || '⚠️ 已取消',
+                completedAt: now
+              };
+            }
+            return tool;
+          });
+          
+          // 同步更新 toolCallsRef
+          if (updatedToolCalls) {
+            updatedToolCalls.forEach(tool => {
+              if (tool.id) {
+                toolCallsRef.current.set(tool.id, tool);
+              }
+            });
+          }
+          
+          // 标记为已完成，停止流式传输状态
+          updatedMessages[i] = {
+            ...msg,
+            isStreaming: false,
+            isCompleted: true,
+            finishReason: 'cancelled',
+            lastUpdated: now,
+            contentItems: updatedContentItems,
+            toolCalls: updatedToolCalls
+          };
+          
+          console.log('✅ 已更新消息和工具调用状态为已取消');
+          break;
+        }
+      }
+      
+      return updatedMessages;
+    });
+  }, []);
+
   const handleSSEEvent = useCallback((event: SSEEvent) => {
     try {
       const eventData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
@@ -446,6 +519,9 @@ export function useSSE() {
         case 'final_report':
           handleFinalReport(eventData);
           break;
+        case 'cancelled':
+          handleCancelled(eventData);
+          break;
         default:
           console.log('🔍 Unknown event type:', event.event);
       }
@@ -453,7 +529,7 @@ export function useSSE() {
       console.error('💥 Error handling SSE event:', error);
       setError(`事件处理错误: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, [handleMessageChunk, handleToolCalls, handleToolCallResult, handleFinalReport]);
+  }, [handleMessageChunk, handleToolCalls, handleToolCallResult, handleFinalReport, handleCancelled]);
 
   const connect = useCallback(async (path: string, requestBody: any) => {
     if (abortControllerRef.current) {
@@ -503,11 +579,82 @@ export function useSSE() {
   }, [handleSSEEvent, clearCaches]);
 
   const disconnect = useCallback(() => {
+    console.log('🛑 用户请求停止生成');
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      console.log('✅ 已发送中断信号');
     }
     setIsStreaming(false);
     setIsConnected(false);
+    
+    // 立即更新最后一条未完成的消息状态，包括工具调用状态
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages];
+      
+      // 找到最后一条正在流式传输的 assistant 消息
+      for (let i = updatedMessages.length - 1; i >= 0; i--) {
+        const msg = updatedMessages[i];
+        if (msg.role === 'assistant' && (msg.isStreaming || !msg.isCompleted)) {
+          const now = new Date();
+          
+          // 更新 contentItems 中的工具调用状态
+          const updatedContentItems = msg.contentItems?.map(item => {
+            if (item.type === 'tool_call' && item.toolCall?.status === 'executing') {
+              return {
+                ...item,
+                toolCall: {
+                  ...item.toolCall,
+                  status: 'completed' as const,
+                  result: item.toolCall.result || '⚠️ 已取消',
+                  completedAt: now
+                }
+              };
+            }
+            return item;
+          });
+          
+          // 更新 toolCalls 数组中的工具调用状态
+          const updatedToolCalls = msg.toolCalls?.map(tool => {
+            if (tool.status === 'executing') {
+              return {
+                ...tool,
+                status: 'completed' as const,
+                result: tool.result || '⚠️ 已取消',
+                completedAt: now
+              };
+            }
+            return tool;
+          });
+          
+          // 同步更新 toolCallsRef
+          if (updatedToolCalls) {
+            updatedToolCalls.forEach(tool => {
+              if (tool.id) {
+                toolCallsRef.current.set(tool.id, tool);
+              }
+            });
+          }
+          
+          // 标记消息为已完成，停止流式传输状态
+          updatedMessages[i] = {
+            ...msg,
+            isStreaming: false,
+            isCompleted: true,
+            finishReason: 'cancelled',
+            lastUpdated: now,
+            contentItems: updatedContentItems,
+            toolCalls: updatedToolCalls
+          };
+          
+          console.log('✅ 已立即更新消息和工具调用状态为已取消');
+          break;
+        }
+      }
+      
+      return updatedMessages;
+    });
+    
+    console.log('✅ 状态已重置');
   }, []);
 
   const clearMessages = useCallback(() => {

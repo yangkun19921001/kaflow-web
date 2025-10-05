@@ -1,15 +1,17 @@
 import React, { useState, useRef, KeyboardEvent } from 'react';
 import { Button } from 'antd';
-import { Send } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
+  onStopStreaming?: () => void;
   isStreaming: boolean;
   placeholder?: string;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ 
-  onSendMessage, 
+  onSendMessage,
+  onStopStreaming,
   isStreaming, 
   placeholder = "请输入你的问题" 
 }) => {
@@ -40,6 +42,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }, 100);
   };
 
+  const handleStop = () => {
+    if (onStopStreaming) {
+      onStopStreaming();
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInput(value);
@@ -67,14 +75,26 @@ const ChatInput: React.FC<ChatInputProps> = ({
           rows={1}
         />
         <div className="input-actions">
-          <Button
-            type="text"
-            icon={<Send size={16} />}
-            onClick={handleSend}
-            disabled={!input.trim() || isStreaming}
-            className="send-btn"
-            size="small"
-          />
+          {isStreaming ? (
+            <Button
+              type="text"
+              icon={<Square size={16} />}
+              onClick={handleStop}
+              className="stop-btn"
+              size="small"
+              title="停止生成"
+            />
+          ) : (
+            <Button
+              type="text"
+              icon={<Send size={16} />}
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="send-btn"
+              size="small"
+              title="发送消息"
+            />
+          )}
         </div>
       </div>
     </div>

@@ -170,6 +170,7 @@ const KaFlowChat: React.FC = () => {
         {/* 输入框 */}
         <ChatInput 
           onSendMessage={sendMessage}
+          onStopStreaming={disconnect}
           isStreaming={isStreaming}
         />
         

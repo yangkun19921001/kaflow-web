@@ -75,7 +75,7 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
       getContainer: () => document.body,
       content: (
         <div>
-          <p style={{ marginBottom: 12, fontSize: '14px', color: '#333' }}>
+          <p style={{ marginBottom: 12, fontSize: '14px', color: 'var(--text-secondary)' }}>
             {hasMessages ? (
               <>
                 切换场景将清空当前所有对话记录，确定要切换到 
@@ -96,10 +96,10 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
             borderLeft: '3px solid #3b82f6',
             borderRadius: '6px',
             fontSize: '13px',
-            color: '#555',
+            color: 'var(--text-secondary)',
             lineHeight: '1.7'
           }}>
-            <div style={{ fontWeight: 600, marginBottom: 6, color: '#333', fontSize: '14px' }}>
+            <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)', fontSize: '14px' }}>
               📋 场景说明
             </div>
             <div>{config.description}</div>
@@ -138,7 +138,7 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
     return (
       <div className="scenario-selector-loading">
         <Spin size="small" />
-        <span style={{ marginLeft: 8 }}>加载场景中...</span>
+        <span style={{ marginLeft: 8, color: 'var(--text-tertiary)' }}>加载场景中...</span>
       </div>
     );
   }

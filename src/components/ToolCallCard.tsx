@@ -82,11 +82,11 @@ const ToolCallCard: React.FC<ToolCallCardProps> = ({ toolCall }) => {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Wrench size={16} style={{ color: statusConfig.color }} />
-          <span style={{ fontWeight: '500', color: '#ffffff' }}>
+          <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
             {toolCall.toolName || toolCall.name}
           </span>
           {hasDetails && (
-            <span style={{ color: '#6b7280', fontSize: '12px' }}>
+            <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>
               {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </span>
           )}
@@ -101,20 +101,20 @@ const ToolCallCard: React.FC<ToolCallCardProps> = ({ toolCall }) => {
       </div>
       
       {isExpanded && hasDetails && (
-        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #404040' }}>
+        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-primary)' }}>
           {toolCall.args && Object.keys(toolCall.args).length > 0 && (
             <div style={{ marginBottom: '12px' }}>
               <div style={{ 
                 fontSize: '12px', 
-                color: '#9ca3af', 
+                color: 'var(--text-tertiary)', 
                 fontWeight: '500', 
                 marginBottom: '6px' 
               }}>
                 执行参数:
               </div>
               <pre style={{
-                background: '#000000',
-                border: '1px solid #333333',
+                background: 'var(--code-bg)',
+                border: '1px solid var(--code-border)',
                 borderRadius: '6px',
                 padding: '8px 12px',
                 fontSize: '12px',
@@ -123,7 +123,7 @@ const ToolCallCard: React.FC<ToolCallCardProps> = ({ toolCall }) => {
                 fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
                 margin: 0,
                 whiteSpace: 'pre-wrap',
-                color: '#e5e7eb'
+                color: 'var(--code-text)'
               }}>
                 {JSON.stringify(toolCall.args, null, 2)}
               </pre>
@@ -134,7 +134,7 @@ const ToolCallCard: React.FC<ToolCallCardProps> = ({ toolCall }) => {
             <div>
               <div style={{ 
                 fontSize: '12px', 
-                color: '#9ca3af', 
+                color: 'var(--text-tertiary)', 
                 fontWeight: '500', 
                 marginBottom: '8px' 
               }}>
@@ -144,10 +144,10 @@ const ToolCallCard: React.FC<ToolCallCardProps> = ({ toolCall }) => {
                 maxHeight: '300px',
                 overflowY: 'auto',
                 padding: '8px',
-                background: '#0f0f0f',
+                background: 'var(--bg-code)',
                 borderRadius: '6px',
-                border: '1px solid #333333',
-                color: '#e5e7eb'
+                border: '1px solid var(--code-border)',
+                color: 'var(--text-secondary)'
               }}>
                 <MarkdownRenderer content={toolCall.result} />
               </div>

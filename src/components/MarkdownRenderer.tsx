@@ -34,9 +34,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
                   borderRadius: '6px',
                   fontSize: '12px',
                   lineHeight: '1.4',
-                  background: '#000000',
-                  border: '1px solid #333333',
-                  color: '#e5e7eb',
+                  background: 'var(--code-bg)',
+                  border: '1px solid var(--code-border)',
+                  color: 'var(--code-text)',
                 }}
                 {...props}
               >
@@ -54,17 +54,17 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             </p>
           ),
           h1: ({ children }) => (
-            <h1 style={{ fontSize: '24px', fontWeight: '600', margin: '16px 0 12px 0', color: '#ffffff' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: '600', margin: '16px 0 12px 0', color: 'var(--text-primary)' }}>
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 style={{ fontSize: '20px', fontWeight: '600', margin: '16px 0 8px 0', color: '#ffffff' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', margin: '16px 0 8px 0', color: 'var(--text-primary)' }}>
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '12px 0 8px 0', color: '#ffffff' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '12px 0 8px 0', color: 'var(--text-primary)' }}>
               {children}
             </h3>
           ),
@@ -88,7 +88,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
               borderLeft: '4px solid #3b82f6',
               paddingLeft: '16px',
               margin: '16px 0',
-              color: '#9ca3af',
+              color: 'var(--text-tertiary)',
               fontStyle: 'italic',
               background: 'rgba(59, 130, 246, 0.05)',
               padding: '12px 16px',
@@ -104,7 +104,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
                 borderCollapse: 'collapse',
                 borderRadius: '8px',
                 overflow: 'hidden',
-                border: '1px solid #404040'
+                border: '1px solid var(--border-primary)'
               }}>
                 {children}
               </table>
@@ -114,10 +114,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             <th style={{
               padding: '12px',
               textAlign: 'left',
-              backgroundColor: '#2f2f2f',
+              backgroundColor: 'var(--bg-secondary)',
               fontWeight: '600',
-              color: '#ffffff',
-              borderBottom: '1px solid #404040'
+              color: 'var(--text-primary)',
+              borderBottom: '1px solid var(--border-primary)'
             }}>
               {children}
             </th>
@@ -125,8 +125,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           td: ({ children }) => (
             <td style={{
               padding: '12px',
-              borderBottom: '1px solid #404040',
-              color: '#e5e7eb'
+              borderBottom: '1px solid var(--border-primary)',
+              color: 'var(--text-secondary)'
             }}>
               {children}
             </td>

@@ -456,22 +456,23 @@ body {
   transform: scale(0.95) !important;
 }
 
-/* 消息卡片 */
+/* 消息卡片 - 增大宽度，与输入框保持一致 */
 .message-wrapper {
   display: flex;
   margin-bottom: 20px;
-  max-width: 768px;
+  max-width: 768px; /* 与输入框相同 */
   margin-left: auto;
   margin-right: auto;
-  padding: 0 20px;
+  padding: 0 20px; /* 左右各 20px */
 }
 
 .message-wrapper:first-child {
   margin-top: 20px;
 }
 
+/* 所有消息都从左边开始 - DeepSeek 风格 */
 .message-wrapper.user-message {
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .message-wrapper.assistant-message {
@@ -485,7 +486,8 @@ body {
   padding: 12px 16px;
   border-radius: 18px;
   border: 1px solid var(--border-primary);
-  max-width: 70%;
+  max-width: 100%; /* 占满可用宽度 */
+  width: 100%;
   word-wrap: break-word;
   position: relative;
   animation: slideInUp 0.3s ease-out;
@@ -495,76 +497,51 @@ body {
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 4px;
-  text-align: right;
+  text-align: left; /* 从左边开始 */
 }
 
-/* AI助手消息 */
+/* AI助手消息 - Cursor/DeepSeek 简洁风格 */
 .assistant-content {
-  max-width: 85%;
+  max-width: 100%; /* 占满可用宽度 */
+  width: 100%;
   animation: slideInUp 0.3s ease-out;
 }
 
+/* 保留旧样式定义以避免其他地方引用错误 */
 .assistant-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  display: none; /* 不再使用 */
 }
 
 .agent-info {
-  flex: 1;
-  min-width: 0;
+  display: none; /* 不再使用 */
 }
 
 .agent-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 2px;
+  display: none; /* 不再使用 */
 }
 
 .agent-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
+  display: none; /* 不再使用 */
 }
 
+/* AI 消息主体 - 移除所有装饰 */
 .assistant-body {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: 12px;
-  padding: 16px;
-  margin-left: 42px; /* 与头像对齐 */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin-left: 0;
   position: relative;
-  transition: all 0.3s ease;
+  transition: none;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.7;
 }
 
-.assistant-body:hover {
-  border-color: var(--border-hover);
-}
-
-.assistant-body::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: -8px;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 8px 8px 8px 0;
-  border-color: transparent var(--border-primary) transparent transparent;
-}
-
+/* 移除气泡尾巴 */
+.assistant-body::before,
 .assistant-body::after {
-  content: '';
-  position: absolute;
-  top: 9px;
-  left: -6px;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 7px 7px 7px 0;
-  border-color: transparent var(--bg-secondary) transparent transparent;
+  display: none;
 }
 
 .message-time {
@@ -595,6 +572,46 @@ body {
 
 .streaming-indicator span {
   color: #3b82f6;
+}
+
+/* Loading Message - 类似 Cursor 的加载动画 */
+.loading-message {
+  display: flex;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.loading-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loading-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--text-tertiary);
+  animation: loadingPulse 1.4s infinite ease-in-out;
+}
+
+.loading-dots .dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots .dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loadingPulse {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Markdown 内容样式 */
@@ -1070,17 +1087,19 @@ body {
   }
   
   .user-bubble {
-    max-width: 85%;
+    max-width: 100%; /* 占满可用宽度 */
+    width: 100%;
     padding: 10px 14px;
   }
   
   .assistant-content {
-    max-width: 95%;
+    max-width: 100%; /* 占满可用宽度 */
+    width: 100%;
   }
   
   .assistant-body {
-    margin-left: 36px;
-    padding: 12px 14px;
+    margin-left: 0; /* 移除左边距 */
+    padding: 0; /* 移除内边距 */
   }
   
   .modern-chat-input {
@@ -1130,16 +1149,15 @@ body {
   }
   
   .assistant-header {
-    gap: 8px;
-    margin-bottom: 6px;
+    display: none; /* 不再使用 */
   }
   
   .assistant-body {
-    margin-left: 32px;
-    padding: 10px 12px;
+    margin-left: 0; /* 移除左边距 */
+    padding: 0; /* 移除内边距 */
   }
   
   .agent-name {
-    font-size: 13px;
+    display: none; /* 不再使用 */
   }
 } 

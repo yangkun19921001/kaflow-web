@@ -5,6 +5,7 @@ import MessageCard from './MessageCard';
 import ChatInput from './ChatInput';
 import WelcomePage from './WelcomePage';
 import ScenarioSelector from './ScenarioSelector';
+import LoadingMessage from './LoadingMessage';
 
 const KaFlowChat: React.FC = () => {
   const [uniqueThreadId, setUniqueThreadId] = useState('');
@@ -12,6 +13,7 @@ const KaFlowChat: React.FC = () => {
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [selectedConfigId, setSelectedConfigId] = useState<string>('1'); // 默认选择设备故障排查助手
   const [selectedConfigName, setSelectedConfigName] = useState<string>('设备故障排查助手');
+  const [isWaitingResponse, setIsWaitingResponse] = useState(false); // 等待 AI 响应
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -89,6 +91,15 @@ const KaFlowChat: React.FC = () => {
     return () => clearTimeout(timer);
   }, [messages, scrollToBottom]);
 
+  // 监听消息变化，关闭 loading
+  useEffect(() => {
+    // 如果有 AI 消息到来，关闭 waiting 状态
+    const hasAssistantMessage = messages.some(msg => msg.role === 'assistant');
+    if (hasAssistantMessage && isWaitingResponse) {
+      setIsWaitingResponse(false);
+    }
+  }, [messages, isWaitingResponse]);
+
   // 处理场景选择
   const handleScenarioSelect = (configId: string, configName: string) => {
     setSelectedConfigId(configId);
@@ -116,6 +127,9 @@ const KaFlowChat: React.FC = () => {
       // 添加用户消息
       addUserMessage(userMessage);
       
+      // 显示 loading 状态
+      setIsWaitingResponse(true);
+      
       // 构建请求体
       const requestBody = {
         messages: [
@@ -136,6 +150,7 @@ const KaFlowChat: React.FC = () => {
     } catch (error) {
       console.error('发送消息失败:', error);
       message.error(`发送失败: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIsWaitingResponse(false);
     }
   };
 
@@ -158,6 +173,8 @@ const KaFlowChat: React.FC = () => {
                 isStreaming={isStreaming && index === messages.length - 1}
               />
             ))}
+            {/* 显示 loading 状态 */}
+            {isWaitingResponse && <LoadingMessage />}
             <div ref={messagesEndRef} />
           </>
         )}

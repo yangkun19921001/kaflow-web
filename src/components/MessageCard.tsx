@@ -58,7 +58,7 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, isStreaming = false 
           {isCurrentlyStreaming && (
             <div className="streaming-indicator">
               <Loader2 size={14} className="animate-spin" />
-              <span>正在思考中...</span>
+              <span>正在推理中...</span>
             </div>
           )}
         </div>

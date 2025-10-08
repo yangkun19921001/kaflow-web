@@ -125,11 +125,27 @@ body {
   transform: translateY(-1px);
 }
 
+/* 应用主布局 */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 主内容区域（聊天区域） */
+.app-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* 主容器 */
 .modern-chat-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   width: 100%;
   background-color: var(--bg-primary);
   overflow: hidden;
@@ -1054,8 +1070,415 @@ body {
   border-color: #2563eb;
 }
 
+/* ===========================
+   侧边栏样式
+   =========================== */
+
+/* 侧边栏容器 */
+.sidebar-container {
+  display: flex;
+  width: 400px;
+  height: 100vh;
+  background-color: var(--bg-primary);
+  border-right: 1px solid var(--border-primary);
+  transition: all 0.3s ease;
+}
+
+/* 一级导航 */
+.sidebar-primary-nav {
+  width: 80px;
+  background-color: var(--bg-tertiary);
+  border-right: 1px solid var(--border-primary);
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  margin: 0 8px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+.sidebar-nav-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-nav-item.active {
+  background-color: var(--bg-suggestion);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
+}
+
+.sidebar-nav-icon {
+  margin-bottom: 8px;
+}
+
+.sidebar-nav-name {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* 二级内容区域 */
+.sidebar-secondary {
+  flex: 1;
+  min-height: 0; /* 关键：允许 flex 子元素正确计算高度 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止内容溢出，但不影响子元素滚动 */
+}
+
+.sidebar-secondary-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0; /* 防止头部被压缩 */
+}
+
+.sidebar-secondary-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.sidebar-secondary-content {
+  flex: 1;
+  min-height: 0; /* 关键：允许 flex 子元素正确计算高度 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止内容溢出，但不影响子元素滚动 */
+}
+
+/* 新建会话区域 */
+.sidebar-new-chat-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0; /* 防止被压缩 */
+}
+
+.sidebar-new-chat-btn {
+  height: 40px;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 会话列表区域 */
+.sidebar-thread-list-section {
+  flex: 1;
+  min-height: 0; /* 关键：允许 flex 子元素正确计算高度 */
+  display: flex;
+  flex-direction: column;
+}
+
+/* 空状态 */
+.sidebar-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-tertiary);
+  padding: 40px 20px;
+}
+
+.sidebar-empty-state p {
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+/* 会话列表容器 */
+.thread-list-container {
+  flex: 1;
+  min-height: 0; /* 关键：允许 flex 子元素正确计算高度 */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 刷新指示器 */
+.thread-list-refresh-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  z-index: 10;
+}
+
+/* 会话列表 */
+.thread-list {
+  flex: 1;
+  min-height: 0; /* 关键：允许 flex 子元素正确计算高度 */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+  overscroll-behavior-y: contain; /* 防止滚动穿透 */
+  touch-action: pan-y; /* 只允许垂直滚动 */
+}
+
+.thread-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.thread-list::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.thread-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.thread-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* 加载状态 */
+.thread-list-loading,
+.thread-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-tertiary);
+}
+
+.thread-list-loading-text {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+/* 加载更多指示器 */
+.thread-list-loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.thread-list-no-more {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+/* 会话项 */
+.thread-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid var(--border-secondary);
+  position: relative;
+  user-select: none;
+}
+
+.thread-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.thread-item.active {
+  background-color: var(--bg-suggestion);
+  border-left: 3px solid #3b82f6;
+  padding-left: 13px;
+}
+
+.thread-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: var(--bg-suggestion);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  margin-right: 12px;
+  margin-top: 2px;
+}
+
+.thread-item-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.thread-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.thread-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thread-item-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.thread-item-count {
+  color: var(--text-tertiary);
+}
+
+.thread-item-divider {
+  color: var(--text-tertiary);
+}
+
+.thread-item-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-tertiary);
+}
+
+.thread-item-indicator {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+}
+
+/* 新建会话对话框 */
+.new-chat-modal-content {
+  padding: 20px 0;
+}
+
+.new-chat-modal-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.new-chat-config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.new-chat-config-item {
+  padding: 16px;
+  border: 2px solid var(--border-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  background-color: var(--bg-primary);
+}
+
+.new-chat-config-item:hover {
+  border-color: var(--border-hover);
+  background-color: var(--bg-hover);
+}
+
+.new-chat-config-item.selected {
+  border-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.new-chat-config-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.new-chat-config-description {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.new-chat-config-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* 加载历史消息样式 */
+.chat-loading-history {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+}
+
+.chat-loading-history-text {
+  font-size: 14px;
+  color: var(--text-tertiary);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
+  /* 移动端隐藏侧边栏，后续可以添加抽屉式侧边栏 */
+  .sidebar-container {
+    display: none;
+  }
+
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .app-main-content {
+    width: 100%;
+  }
+
   .modern-chat-container {
     height: 100vh;
   }

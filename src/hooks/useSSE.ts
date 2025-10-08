@@ -505,7 +505,75 @@ export function useSSE() {
 
   const handleError = useCallback((data: any) => {
     console.error('💥 收到错误事件:', data);
-    setError(data.error);
+    const errorMessage = data.error || data.message || '未知错误';
+    setError(errorMessage);
+    
+    // 标记最后一条未完成的消息为完成状态
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages];
+      
+      // 找到最后一条正在流式传输的 assistant 消息
+      for (let i = updatedMessages.length - 1; i >= 0; i--) {
+        const msg = updatedMessages[i];
+        if (msg.role === 'assistant' && (msg.isStreaming || !msg.isCompleted)) {
+          const now = new Date();
+          
+          // 更新 contentItems 中的工具调用状态
+          const updatedContentItems = msg.contentItems?.map(item => {
+            if (item.type === 'tool_call' && item.toolCall?.status === 'executing') {
+              return {
+                ...item,
+                toolCall: {
+                  ...item.toolCall,
+                  status: 'failed' as const,
+                  result: item.toolCall.result || `❌ 错误: ${errorMessage}`,
+                  completedAt: now
+                }
+              };
+            }
+            return item;
+          });
+          
+          // 更新 toolCalls 数组中的工具调用状态
+          const updatedToolCalls = msg.toolCalls?.map(tool => {
+            if (tool.status === 'executing') {
+              return {
+                ...tool,
+                status: 'failed' as const,
+                result: tool.result || `❌ 错误: ${errorMessage}`,
+                completedAt: now
+              };
+            }
+            return tool;
+          });
+          
+          // 同步更新 toolCallsRef
+          if (updatedToolCalls) {
+            updatedToolCalls.forEach(tool => {
+              if (tool.id) {
+                toolCallsRef.current.set(tool.id, tool);
+              }
+            });
+          }
+          
+          // 标记为已完成，停止流式传输状态
+          updatedMessages[i] = {
+            ...msg,
+            isStreaming: false,
+            isCompleted: true,
+            finishReason: 'error',
+            lastUpdated: now,
+            contentItems: updatedContentItems,
+            toolCalls: updatedToolCalls
+          };
+          
+          console.log('✅ 已更新消息状态为错误');
+          break;
+        }
+      }
+      
+      return updatedMessages;
+    });
   }, []);
 
   const handleSSEEvent = useCallback((event: SSEEvent) => {
@@ -672,6 +740,16 @@ export function useSSE() {
     setError(null);
   }, [clearCaches]);
 
+  /**
+   * 直接设置历史消息（用于加载历史记录）
+   */
+  const setHistoryMessages = useCallback((historyMessages: Message[]) => {
+    setMessages(historyMessages);
+    clearCaches();
+    setError(null);
+    console.log('已设置历史消息，共', historyMessages.length, '条');
+  }, [clearCaches]);
+
   return {
     messages,
     isConnected,
@@ -680,6 +758,7 @@ export function useSSE() {
     connect,
     disconnect,
     clearMessages,
-    addUserMessage
+    addUserMessage,
+    setHistoryMessages
   };
 }

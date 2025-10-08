@@ -429,6 +429,7 @@ export function useSSE() {
     setMessages(prev => [...prev, reportMessage]);
   }, []);
 
+
   const handleCancelled = useCallback((data: any) => {
     console.log('🛑 收到取消事件:', data);
     setIsStreaming(false);
@@ -502,6 +503,11 @@ export function useSSE() {
     });
   }, []);
 
+  const handleError = useCallback((data: any) => {
+    console.error('💥 收到错误事件:', data);
+    setError(data.error);
+  }, []);
+
   const handleSSEEvent = useCallback((event: SSEEvent) => {
     try {
       const eventData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
@@ -521,6 +527,9 @@ export function useSSE() {
           break;
         case 'cancelled':
           handleCancelled(eventData);
+          break;
+        case 'error':
+          handleError(eventData);
           break;
         default:
           console.log('🔍 Unknown event type:', event.event);

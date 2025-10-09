@@ -12,6 +12,14 @@ interface ThreadListProps {
 }
 
 /**
+ * 时间分组类型
+ */
+interface ThreadGroup {
+  label: string;
+  threads: Thread[];
+}
+
+/**
  * 会话列表组件
  * 功能：
  * 1. 展示用户的会话列表
@@ -44,6 +52,78 @@ const ThreadList: React.FC<ThreadListProps> = ({
     const config = configs.find((c) => c.id === configId);
     return config?.name;
   };
+
+  /**
+   * 将会话按时间分组
+   */
+  const groupThreadsByTime = useCallback((threads: Thread[]): ThreadGroup[] => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const groups: { [key: string]: Thread[] } = {
+      '今天': [],
+      '昨天': [],
+      '7 天内': [],
+      '30 天内': [],
+    };
+
+    const monthGroups: { [key: string]: Thread[] } = {};
+
+    threads.forEach((thread) => {
+      const threadDate = new Date(thread.last_updated);
+      const threadDateOnly = new Date(
+        threadDate.getFullYear(),
+        threadDate.getMonth(),
+        threadDate.getDate()
+      );
+
+      if (threadDateOnly.getTime() === today.getTime()) {
+        groups['今天'].push(thread);
+      } else if (threadDateOnly.getTime() === yesterday.getTime()) {
+        groups['昨天'].push(thread);
+      } else if (threadDateOnly >= sevenDaysAgo) {
+        groups['7 天内'].push(thread);
+      } else if (threadDateOnly >= thirtyDaysAgo) {
+        groups['30 天内'].push(thread);
+      } else {
+        // 按月份分组
+        const year = threadDate.getFullYear();
+        const month = threadDate.getMonth() + 1;
+        const monthKey = `${year} 年 ${month} 月`;
+        if (!monthGroups[monthKey]) {
+          monthGroups[monthKey] = [];
+        }
+        monthGroups[monthKey].push(thread);
+      }
+    });
+
+    // 构建结果数组
+    const result: ThreadGroup[] = [];
+
+    // 添加固定时间段
+    ['今天', '昨天', '7 天内', '30 天内'].forEach((label) => {
+      if (groups[label].length > 0) {
+        result.push({ label, threads: groups[label] });
+      }
+    });
+
+    // 添加月份分组（按时间倒序）
+    const sortedMonthKeys = Object.keys(monthGroups).sort((a, b) => {
+      const [yearA, monthA] = a.split(' 年 ').map((v) => parseInt(v));
+      const [yearB, monthB] = b.split(' 年 ').map((v) => parseInt(v));
+      if (yearA !== yearB) return yearB - yearA;
+      return monthB - monthA;
+    });
+
+    sortedMonthKeys.forEach((monthKey) => {
+      result.push({ label: monthKey, threads: monthGroups[monthKey] });
+    });
+
+    return result;
+  }, []);
 
   /**
    * 加载会话列表
@@ -215,15 +295,25 @@ const ThreadList: React.FC<ThreadListProps> = ({
           </div>
         ) : (
           <>
-            {/* 会话列表项 */}
-            {threads.map((thread) => (
-              <ThreadItem
-                key={thread.thread_id}
-                thread={thread}
-                isActive={thread.thread_id === activeThreadId}
-                onClick={() => handleThreadClick(thread)}
-                configName={getConfigName(thread.config_id)}
-              />
+            {/* 按时间分组显示会话列表 */}
+            {groupThreadsByTime(threads).map((group, groupIndex) => (
+              <div key={group.label} className="thread-group">
+                {/* 分组标题 */}
+                <div className="thread-group-title">{group.label}</div>
+                
+                {/* 分组下的会话列表 */}
+                <div className="thread-group-items">
+                  {group.threads.map((thread) => (
+                    <ThreadItem
+                      key={thread.thread_id}
+                      thread={thread}
+                      isActive={thread.thread_id === activeThreadId}
+                      onClick={() => handleThreadClick(thread)}
+                      configName={getConfigName(thread.config_id)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
 
             {/* 加载更多指示器 */}

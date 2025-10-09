@@ -17,6 +17,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // 默认高度和最大高度常量
+  const DEFAULT_HEIGHT = 80; // 默认约3行
+  const MAX_HEIGHT = 200; // 最大约8行
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -31,9 +35,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     onSendMessage(input);
     setInput('');
     
-    // 重置输入框高度
+    // 重置输入框高度为默认高度
     if (textareaRef.current) {
-      textareaRef.current.style.height = '24px';
+      textareaRef.current.style.height = `${DEFAULT_HEIGHT}px`;
     }
     
     // 聚焦到输入框
@@ -54,10 +58,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     
     // 自动调整高度
     if (textareaRef.current) {
-      textareaRef.current.style.height = '24px';
+      textareaRef.current.style.height = `${DEFAULT_HEIGHT}px`;
       const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 120; // 最大高度约5行
-      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+      textareaRef.current.style.height = `${Math.min(scrollHeight, MAX_HEIGHT)}px`;
     }
   };
 

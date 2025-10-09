@@ -24,10 +24,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "REACT_APP_BASE_URL=http://localhost:8102 react-scripts start",
-    "build": "REACT_APP_BASE_URL=http://localhost:8102 react-scripts build",
-    "test": "REACT_APP_BASE_URL=http://localhost:8102 react-scripts test",
-    "eject": "REACT_APP_BASE_URL=http://localhost:8102 react-scripts eject"  
+    "start": "REACT_APP_BASE_URL=http://localhost:8101 react-scripts start",
+    "build": "REACT_APP_BASE_URL=http://localhost:8101 react-scripts build",
+    "test": "REACT_APP_BASE_URL=http://localhost:8101 react-scripts test",
+    "eject": "REACT_APP_BASE_URL=http://localhost:8101 react-scripts eject"  
   },
   "eslintConfig": {
     "extends": [

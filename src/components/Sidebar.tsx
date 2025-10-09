@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Database, Plus } from 'lucide-react';
+import { Bot, Database, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button, Modal, message } from 'antd';
 import ThreadList from './ThreadList';
 import { Thread } from '../services/threadService';
@@ -38,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [activeNav, setActiveNav] = useState<string>('agent');
   const [isNewChatModalVisible, setIsNewChatModalVisible] = useState(false);
   const [selectedConfigId, setSelectedConfigId] = useState<string>('');
+  const [isCollapsed, setIsCollapsed] = useState(false); // 侧边栏折叠状态
 
   /**
    * 一级导航配置
@@ -59,7 +60,18 @@ const Sidebar: React.FC<SidebarProps> = ({
    * 处理导航切换
    */
   const handleNavClick = (navId: string) => {
+    // 如果是收起状态，点击时自动展开
+    if (isCollapsed) {
+      setIsCollapsed(false);
+    }
     setActiveNav(navId);
+  };
+
+  /**
+   * 切换侧边栏折叠状态
+   */
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
   };
 
   /**
@@ -140,18 +152,19 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="sidebar-container">
+    <div className={`sidebar-container ${isCollapsed ? 'collapsed' : ''}`}>
       {/* 一级导航 */}
       <div className="sidebar-primary-nav">
         {navItems.map((item) => (
           <div
             key={item.id}
             className={`sidebar-nav-item ${
-              activeNav === item.id ? 'active' : ''
+              activeNav === item.id && !isCollapsed ? 'active' : ''
             }`}
             onClick={() => handleNavClick(item.id)}
             role="button"
             tabIndex={0}
+            title={isCollapsed ? item.name : ''}
             onKeyPress={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 handleNavClick(item.id);
@@ -159,23 +172,36 @@ const Sidebar: React.FC<SidebarProps> = ({
             }}
           >
             <div className="sidebar-nav-icon">{item.icon}</div>
-            <div className="sidebar-nav-name">{item.name}</div>
+            {!isCollapsed && <div className="sidebar-nav-name">{item.name}</div>}
           </div>
         ))}
+        
+        {/* 底部预留空间：用户和设置 */}
+        <div className="sidebar-nav-spacer"></div>
       </div>
 
       {/* 二级内容区域 */}
-      <div className="sidebar-secondary">
-        {/* 标题栏 */}
-        <div className="sidebar-secondary-header">
-          <h2 className="sidebar-secondary-title">
-            {navItems.find((item) => item.id === activeNav)?.name || ''}
-          </h2>
-        </div>
+      {!isCollapsed && (
+        <div className="sidebar-secondary">
+          {/* 标题栏 */}
+          <div className="sidebar-secondary-header">
+            <h2 className="sidebar-secondary-title">
+              {navItems.find((item) => item.id === activeNav)?.name || ''}
+            </h2>
+            {/* 折叠按钮 - 右上角 */}
+            <button
+              className="sidebar-collapse-btn"
+              onClick={toggleCollapse}
+              title="收起侧边栏"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          </div>
 
-        {/* 内容区域 */}
-        {renderSecondaryContent()}
-      </div>
+          {/* 内容区域 */}
+          {renderSecondaryContent()}
+        </div>
+      )}
 
       {/* 创建新会话对话框 */}
       <Modal

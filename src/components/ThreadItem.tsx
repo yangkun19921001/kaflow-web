@@ -1,6 +1,5 @@
 import React from 'react';
 import { Thread } from '../services/threadService';
-import { Clock } from 'lucide-react';
 
 interface ThreadItemProps {
   thread: Thread;
@@ -50,35 +49,9 @@ const getScenarioIcon = (configName?: string, configId?: string): string => {
 
 /**
  * 单个会话项组件
- * 展示会话的基本信息：首条消息、消息数量、最后更新时间
+ * 展示会话的基本信息：场景图标和首条消息
  */
 const ThreadItem: React.FC<ThreadItemProps> = ({ thread, isActive, onClick, configName }) => {
-  /**
-   * 格式化时间显示
-   * 今天显示时间，昨天显示"昨天"，更早显示日期
-   */
-  const formatTime = (timestamp: string): string => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    const threadDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-    if (threadDate.getTime() === today.getTime()) {
-      // 今天 - 显示时间
-      return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-    } else if (threadDate.getTime() === yesterday.getTime()) {
-      // 昨天
-      return '昨天';
-    } else if (now.getFullYear() === date.getFullYear()) {
-      // 今年 - 显示月日
-      return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
-    } else {
-      // 更早 - 显示完整日期
-      return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' });
-    }
-  };
-
   /**
    * 截断长文本
    * 超过指定长度的文本会被截断并添加省略号
@@ -112,18 +85,6 @@ const ThreadItem: React.FC<ThreadItemProps> = ({ thread, isActive, onClick, conf
         {/* 首条消息（标题） */}
         <div className="thread-item-title">
           {truncateText(thread.first_message)}
-        </div>
-
-        {/* 底部信息：消息数量和时间 */}
-        <div className="thread-item-footer">
-          <span className="thread-item-count">
-            {thread.message_count} 条消息
-          </span>
-          <span className="thread-item-divider">·</span>
-          <span className="thread-item-time">
-            <Clock size={12} />
-            {formatTime(thread.last_updated)}
-          </span>
         </div>
       </div>
 

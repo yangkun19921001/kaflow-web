@@ -43,9 +43,7 @@ export interface SSEEvent {
   data: any;
 }
 
-/**
- * SSE流式处理器 (基于deer-flow实现)
- */
+
 async function* fetchStream(url: string, init?: RequestInit): AsyncIterable<SSEEvent> {
   console.log('🚀 fetchStream开始:', { url, init });
   

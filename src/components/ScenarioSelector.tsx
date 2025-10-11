@@ -12,6 +12,7 @@ interface ScenarioSelectorProps {
   selectedConfigId?: string;
   onSelect: (configId: string, configName: string) => void;
   onClearMessages: () => void;
+  onDisconnect?: () => void; // 新增：停止当前SSE连接
   hasMessages: boolean;
   disabled?: boolean;
 }
@@ -20,6 +21,7 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   selectedConfigId,
   onSelect,
   onClearMessages,
+  onDisconnect,
   hasMessages,
   disabled = false,
 }) => {
@@ -111,13 +113,24 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
       okType: 'primary',
       centered: true,
       onOk: () => {
-        // 如果有消息历史，先清空消息
-        if (hasMessages) {
-          onClearMessages();
+        console.log('🔄 开始切换场景...');
+        
+        // 1. 先停止当前的SSE连接（无论是否在进行中）
+        if (onDisconnect) {
+          console.log('🛑 停止当前SSE连接...');
+          onDisconnect();
         }
-        // 切换场景
+        
+        // 2. 清空消息和所有loading状态（无论是否有消息）
+        // 这确保所有loading动画都被关闭
+        console.log('🗑️ 清空消息历史和loading状态...');
+        onClearMessages();
+        
+        // 3. 切换场景
+        console.log(`✅ 切换到场景: ${config.name}`);
         onSelect(config.id, config.name);
-        // 显示成功提示
+        
+        // 4. 显示成功提示
         message.success(`已切换到 ${config.name}`);
       },
     });

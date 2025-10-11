@@ -12,6 +12,7 @@ interface KaFlowChatProps {
   currentThreadId?: string;
   currentConfigId?: string;
   onThreadIdChange?: (threadId: string) => void;
+  onDisconnectRef?: (disconnect: () => void) => void; // 传递 disconnect 函数给父组件
   shouldLoadHistory?: boolean; // 是否应该加载历史消息（只有点击历史会话时为 true）
 }
 
@@ -19,6 +20,7 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
   currentThreadId,
   currentConfigId,
   onThreadIdChange,
+  onDisconnectRef,
   shouldLoadHistory = false, // 默认不加载历史
 }) => {
   const [uniqueThreadId, setUniqueThreadId] = useState('');
@@ -51,6 +53,13 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
     addUserMessage,
     setHistoryMessages
   } = useSSE();
+  
+  // 将 disconnect 函数传递给父组件
+  useEffect(() => {
+    if (onDisconnectRef) {
+      onDisconnectRef(disconnect);
+    }
+  }, [disconnect, onDisconnectRef]);
 
   // 生成唯一的thread_id
   useEffect(() => {
@@ -372,6 +381,17 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
     }
   }, [error]);
 
+  /**
+   * 监听 isStreaming 状态，当SSE连接结束时关闭 loading
+   * 修复bug：SSE异常断开或正常结束时，确保所有loading状态都被关闭
+   */
+  useEffect(() => {
+    if (!isStreaming && !isConnected) {
+      console.log('✅ SSE连接已结束，关闭所有loading状态');
+      setIsWaitingResponse(false);
+    }
+  }, [isStreaming, isConnected]);
+
   // 智能滚动控制
   const scrollToBottom = useCallback(() => {
     if (isAutoScrollEnabled && !isUserScrolling) {
@@ -436,6 +456,7 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
 
   // 处理场景选择
   const handleScenarioSelect = (configId: string, configName: string) => {
+
     setSelectedConfigId(configId);
     setSelectedConfigName(configName);
     
@@ -466,7 +487,13 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
   const handleClearMessages = () => {
     clearMessages();
     lastMessageCountRef.current = 0; // 重置消息计数
-    console.log('已清空消息历史');
+    setIsWaitingResponse(false); // 重置等待响应状态，关闭 LoadingMessage
+    setIsLoadingHistory(false); // 重置历史加载状态
+    setIsLoadingMoreHistory(false); // 重置更多历史加载状态
+    setHasLoadedHistory(false); // 重置已加载标记
+    setHistoryPage(1); // 重置分页
+    setHasMoreHistory(true); // 重置是否还有更多
+    console.log('✅ 已清空消息历史和所有loading状态');
   };
 
   // 发送消息
@@ -588,6 +615,7 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
           selectedConfigId={selectedConfigId}
           onSelect={handleScenarioSelect}
           onClearMessages={handleClearMessages}
+          onDisconnect={disconnect}
           hasMessages={messages.length > 0}
           disabled={isStreaming}
         />

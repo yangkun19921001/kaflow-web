@@ -18,6 +18,9 @@ const AppContent: React.FC = () => {
   const [availableConfigs, setAvailableConfigs] = useState<ConfigItem[]>([]);
   const [shouldLoadHistory, setShouldLoadHistory] = useState<boolean>(false); // 是否应该加载历史
   const username = 'yang1001yk@gmail.com'; // 实际项目中应从用户登录状态获取
+  
+  // 保存 disconnect 函数的引用
+  const disconnectRef = React.useRef<(() => void) | null>(null);
 
   /**
    * 加载可用配置列表
@@ -49,9 +52,17 @@ const AppContent: React.FC = () => {
    * 处理新建会话
    */
   const handleNewChat = (configId: string) => {
-    console.log('🆕 创建新会话，场景ID:', configId);
+    console.log('🆕 [新建会话] 开始创建新会话，场景ID:', configId);
     
-    // 生成新的 thread_id
+    // 1. 先停止当前的SSE连接（如果有的话）
+    if (disconnectRef.current) {
+      console.log('🛑 [新建会话] 步骤1: 停止当前SSE连接');
+      disconnectRef.current();
+    } else {
+      console.log('ℹ️  [新建会话] 没有活动的SSE连接');
+    }
+    
+    // 2. 生成新的 thread_id
     const generateUUID = () => {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
@@ -61,9 +72,21 @@ const AppContent: React.FC = () => {
     };
 
     const newThreadId = `${username}_${generateUUID()}_${configId}`;
+    console.log('✅ [新建会话] 步骤2: 生成新的thread_id:', newThreadId);
+    
     setCurrentThreadId(newThreadId);
     setCurrentConfigId(configId);
     setShouldLoadHistory(false); // 新建会话时，不需要加载历史消息
+    
+    console.log('✅ [新建会话] 创建完成');
+  };
+  
+  /**
+   * 从 KaFlowChat 获取 disconnect 函数
+   */
+  const handleDisconnectRef = (disconnect: () => void) => {
+    disconnectRef.current = disconnect;
+    console.log('✅ disconnect 函数已注册到 App');
   };
 
   /**
@@ -137,6 +160,7 @@ const AppContent: React.FC = () => {
                 currentThreadId={currentThreadId}
                 currentConfigId={currentConfigId}
                 onThreadIdChange={handleThreadIdChange}
+                onDisconnectRef={handleDisconnectRef}
                 shouldLoadHistory={shouldLoadHistory}
               />
             </div>

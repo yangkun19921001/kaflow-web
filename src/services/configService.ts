@@ -4,9 +4,10 @@
  */
 
 import { ConfigsResponse } from '../types/config';
+import { getApiUrl } from '../utils/urlParams';
 
-// 基础 URL，从环境变量获取
-const BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:8102';
+// 基础 URL，优先从 URL 参数获取，其次环境变量
+const getBaseUrl = () => getApiUrl();
 
 /**
  * 获取配置列表
@@ -14,7 +15,8 @@ const BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:8102';
  */
 export const fetchConfigs = async (): Promise<ConfigsResponse> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/configs`);
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/configs`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

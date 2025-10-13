@@ -3,8 +3,10 @@
  * 负责与后端会话相关 API 交互
  */
 
-// 基础 URL，从环境变量获取
-const BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:8102';
+import { getApiUrl } from '../utils/urlParams';
+
+// 基础 URL，优先从 URL 参数获取，其次环境变量
+const getBaseUrl = () => getApiUrl();
 
 /**
  * 会话线程信息
@@ -98,7 +100,8 @@ export interface GetHistoryResponse {
  */
 export const fetchThreads = async (request: GetThreadsRequest): Promise<GetThreadsResponse> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/chat/threads`, {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/chat/threads`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -132,7 +135,8 @@ export const fetchThreads = async (request: GetThreadsRequest): Promise<GetThrea
  */
 export const fetchHistory = async (request: GetHistoryRequest): Promise<GetHistoryResponse> => {
   try {
-    const response = await fetch(`${BASE_URL}/api/chat/history`, {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/chat/history`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -2,6 +2,7 @@
   "name": "kaflow-web",
   "version": "0.1.0",
   "private": true,
+  "homepage": "/kaflow-web",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
@@ -24,10 +25,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "REACT_APP_BASE_URL=http://10.1.16.13:8101 react-scripts start",
-    "build": "REACT_APP_BASE_URL=http://10.1.16.13:8101 react-scripts build",
-    "test": "REACT_APP_BASE_URL=http://10.1.16.13:8101 react-scripts test",
-    "eject": "REACT_APP_BASE_URL=http://10.1.16.13:8101 react-scripts eject"  
+    "start": "REACT_APP_KAFLOW_URL=https://iaas-ops-agent.pyinfra.work react-scripts start",
+    "build": "REACT_APP_KAFLOW_URL=https://iaas-ops-agent.pyinfra.work react-scripts build",
+    "test": "REACT_APP_KAFLOW_URL=https://iaas-ops-agent.pyinfra.work react-scripts test",
+    "eject": "REACT_APP_KAFLOW_URL=https://iaas-ops-agent.pyinfra.work react-scripts eject"  
   },
   "eslintConfig": {
     "extends": [

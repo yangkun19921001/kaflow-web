@@ -8,6 +8,7 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { Thread } from './services/threadService';
 import { fetchConfigs } from './services/configService';
 import { ConfigItem } from './types/config';
+import { getConfigFromURL, isInIframe, sendMessageToParent } from './utils/urlParams';
 import './styles/App.css';
 import 'antd/dist/reset.css';
 
@@ -17,10 +18,27 @@ const AppContent: React.FC = () => {
   const [currentConfigId, setCurrentConfigId] = useState<string>('1');
   const [availableConfigs, setAvailableConfigs] = useState<ConfigItem[]>([]);
   const [shouldLoadHistory, setShouldLoadHistory] = useState<boolean>(false); // 是否应该加载历史
-  const username = 'yang1001yk@gmail.com'; // 实际项目中应从用户登录状态获取
+  
+  // 从 URL 参数获取配置
+  const urlConfig = getConfigFromURL();
+  const username = urlConfig.username || 'guest@kaflow.ai'; // 从URL参数获取，或使用默认值
+  const inIframe = isInIframe();
   
   // 保存 disconnect 函数的引用
   const disconnectRef = React.useRef<(() => void) | null>(null);
+  
+  // iframe 模式日志
+  useEffect(() => {
+    if (inIframe) {
+      console.log('🖼️  运行在 iframe 中');
+      console.log('   - username:', username);
+      console.log('   - hideHeader:', urlConfig.hideHeader);
+      console.log('   - hideSidebar:', urlConfig.hideSidebar);
+      
+      // 通知父窗口已就绪
+      sendMessageToParent('ready', { username });
+    }
+  }, [inIframe, username, urlConfig.hideHeader, urlConfig.hideSidebar]);
 
   /**
    * 加载可用配置列表
@@ -96,6 +114,10 @@ const AppContent: React.FC = () => {
     setCurrentThreadId(threadId);
   };
 
+  // 根据 URL 参数决定是否显示侧边栏和头部
+  const showSidebar = !urlConfig.hideSidebar;
+  const showHeader = !urlConfig.hideHeader;
+  
   return (
     <ConfigProvider 
       locale={zhCN}
@@ -138,27 +160,33 @@ const AppContent: React.FC = () => {
       }}
     >
       <AntdApp>
-        <div className="App">
-          <div className="theme-toggle-container">
-            <ThemeToggle />
-          </div>
+        <div className={`App ${inIframe ? 'iframe-mode' : ''}`}>
+          {/* 主题切换按钮 */}
+          {showHeader && (
+            <div className="theme-toggle-container">
+              <ThemeToggle />
+            </div>
+          )}
 
           {/* 主布局：侧边栏 + 聊天区域 */}
-          <div className="app-layout">
+          <div className={`app-layout ${!showSidebar ? 'no-sidebar' : ''}`}>
             {/* 侧边栏 */}
-            <Sidebar
-              username={username}
-              activeThreadId={currentThreadId}
-              onThreadSelect={handleThreadSelect}
-              onNewChat={handleNewChat}
-              availableConfigs={availableConfigs}
-            />
+            {showSidebar && (
+              <Sidebar
+                username={username}
+                activeThreadId={currentThreadId}
+                onThreadSelect={handleThreadSelect}
+                onNewChat={handleNewChat}
+                availableConfigs={availableConfigs}
+              />
+            )}
 
             {/* 聊天区域 */}
             <div className="app-main-content">
               <KaFlowChat
                 currentThreadId={currentThreadId}
                 currentConfigId={currentConfigId}
+                username={username}
                 onThreadIdChange={handleThreadIdChange}
                 onDisconnectRef={handleDisconnectRef}
                 shouldLoadHistory={shouldLoadHistory}

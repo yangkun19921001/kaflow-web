@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { getApiUrl } from '../utils/urlParams';
 
 export interface ContentItem {
   type: 'text' | 'tool_call';
@@ -47,6 +48,8 @@ export interface SSEEvent {
 async function* fetchStream(url: string, init?: RequestInit): AsyncIterable<SSEEvent> {
   console.log('🚀 fetchStream开始:', { url, init });
   
+  let reader: ReadableStreamDefaultReader<string> | null = null;
+  
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -61,16 +64,15 @@ async function* fetchStream(url: string, init?: RequestInit): AsyncIterable<SSEE
     console.log('✅ fetch请求成功，状态码:', response.status);
     
     if (response.status !== 200) {
-      throw new Error(`Failed to fetch from ${url}: ${response.status}`);
+      throw new Error(`请求失败 (状态码: ${response.status})`);
     }
     
-    const reader = response.body
-      ?.pipeThrough(new TextDecoderStream())
-      .getReader();
-      
-    if (!reader) {
-      throw new Error("Response body is not readable");
+    const body = response.body?.pipeThrough(new TextDecoderStream());
+    if (!body) {
+      throw new Error("无法读取响应流");
     }
+    
+    reader = body.getReader();
     
     let buffer = "";
     let eventCount = 0;
@@ -79,7 +81,7 @@ async function* fetchStream(url: string, init?: RequestInit): AsyncIterable<SSEE
       const { done, value } = await reader.read();
       
       if (done) {
-        console.log('✅ 流读取完成');
+        console.log('✅ 流读取完成，共处理', eventCount, '个事件');
         break;
       }
       
@@ -101,7 +103,26 @@ async function* fetchStream(url: string, init?: RequestInit): AsyncIterable<SSEE
     }
   } catch (error) {
     console.error('💥 fetchStream错误:', error);
+    
+    // 确保 reader 被关闭
+    if (reader) {
+      try {
+        await reader.cancel();
+      } catch (e) {
+        console.warn('⚠️  关闭 reader 失败:', e);
+      }
+    }
+    
     throw error;
+  } finally {
+    // 确保 reader 被释放
+    if (reader) {
+      try {
+        reader.releaseLock();
+      } catch (e) {
+        // reader 可能已经被释放，忽略错误
+      }
+    }
   }
 }
 
@@ -143,8 +164,9 @@ function resolveApiURL(path: string): string {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  console.log('🔧 构建完整的API URL:', process.env.REACT_APP_BASE_URL);
-  return `${process.env.REACT_APP_BASE_URL}/api/${path}`;
+  const apiUrl = getApiUrl();
+  console.log('🔧 构建完整的API URL:', apiUrl);
+  return `${apiUrl}/api/${path}`;
 }
 
 /**
@@ -642,12 +664,71 @@ export function useSSE() {
 
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('🛑 SSE连接被中断');
+        console.log('🛑 SSE连接被用户中断');
+        // 用户主动中断，不显示错误
       } else {
         console.error('💥 SSE连接错误:', error);
-        setError(error instanceof Error ? error.message : 'SSE连接失败');
+        const errorMessage = error instanceof Error ? error.message : 'SSE连接失败';
+        setError(errorMessage);
+        
+        // 将最后一条未完成的消息标记为失败
+        setMessages(prevMessages => {
+          const updatedMessages = [...prevMessages];
+          
+          for (let i = updatedMessages.length - 1; i >= 0; i--) {
+            const msg = updatedMessages[i];
+            if (msg.role === 'assistant' && (msg.isStreaming || !msg.isCompleted)) {
+              const now = new Date();
+              
+              // 更新 contentItems 中的工具调用状态
+              const updatedContentItems = msg.contentItems?.map(item => {
+                if (item.type === 'tool_call' && item.toolCall?.status === 'executing') {
+                  return {
+                    ...item,
+                    toolCall: {
+                      ...item.toolCall,
+                      status: 'failed' as const,
+                      result: item.toolCall.result || `❌ 连接中断: ${errorMessage}`,
+                      completedAt: now
+                    }
+                  };
+                }
+                return item;
+              });
+              
+              // 更新 toolCalls 数组中的工具调用状态
+              const updatedToolCalls = msg.toolCalls?.map(tool => {
+                if (tool.status === 'executing') {
+                  return {
+                    ...tool,
+                    status: 'failed' as const,
+                    result: tool.result || `❌ 连接中断: ${errorMessage}`,
+                    completedAt: now
+                  };
+                }
+                return tool;
+              });
+              
+              updatedMessages[i] = {
+                ...msg,
+                isStreaming: false,
+                isCompleted: true,
+                finishReason: 'error',
+                lastUpdated: now,
+                contentItems: updatedContentItems,
+                toolCalls: updatedToolCalls
+              };
+              
+              console.log('✅ 已将异常消息标记为失败状态');
+              break;
+            }
+          }
+          
+          return updatedMessages;
+        });
       }
     } finally {
+      console.log('🔄 finally: 确保清除所有loading状态');
       setIsStreaming(false);
       setIsConnected(false);
     }

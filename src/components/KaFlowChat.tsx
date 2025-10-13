@@ -11,6 +11,7 @@ import { fetchHistory, HistoryCheckpoint } from '../services/threadService';
 interface KaFlowChatProps {
   currentThreadId?: string;
   currentConfigId?: string;
+  username?: string; // 用户名（从 URL 参数或父组件传入）
   onThreadIdChange?: (threadId: string) => void;
   onDisconnectRef?: (disconnect: () => void) => void; // 传递 disconnect 函数给父组件
   shouldLoadHistory?: boolean; // 是否应该加载历史消息（只有点击历史会话时为 true）
@@ -19,6 +20,7 @@ interface KaFlowChatProps {
 const KaFlowChat: React.FC<KaFlowChatProps> = ({
   currentThreadId,
   currentConfigId,
+  username = 'devyk@kaflow.ai', // 默认用户名
   onThreadIdChange,
   onDisconnectRef,
   shouldLoadHistory = false, // 默认不加载历史
@@ -72,12 +74,11 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
     };
 
     const generateUniqueThreadId = (configId: string) => {
-      const email = 'yang1001yk@gmail.com';
       const uuid = generateUUID();
       // 格式：username_uuid_configId
-      const threadId = `${email}_${uuid}_${configId}`;
+      const threadId = `${username}_${uuid}_${configId}`;
       setUniqueThreadId(threadId);
-      console.log('Generated unique thread_id:', threadId);
+      console.log('Generated unique thread_id:', threadId, 'for user:', username);
       
       // 通知父组件 thread_id 变化
       if (onThreadIdChange) {
@@ -93,7 +94,7 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
       // 使用当前选中的 configId 生成 thread_id
       generateUniqueThreadId(selectedConfigId);
     }
-  }, [currentThreadId, selectedConfigId, onThreadIdChange]);
+  }, [currentThreadId, selectedConfigId, username, onThreadIdChange]);
 
   // 监听外部 configId 变化
   useEffect(() => {
@@ -373,11 +374,20 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
    */
   useEffect(() => {
     if (error) {
-      console.error('SSE 错误:', error);
-      message.error(`发生错误: ${error}`);
+      console.error('❌ SSE 错误:', error);
       
-      // 关闭 loading 状态
+      // 显示错误toast（持续时间更长，更醒目）
+      message.error({
+        content: `连接异常: ${error}`,
+        duration: 5, // 显示5秒
+        style: {
+          marginTop: '20vh',
+        },
+      });
+      
+      // 立即关闭所有 loading 状态
       setIsWaitingResponse(false);
+      console.log('✅ 已关闭所有loading状态（由于error）');
     }
   }, [error]);
 
@@ -386,11 +396,13 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
    * 修复bug：SSE异常断开或正常结束时，确保所有loading状态都被关闭
    */
   useEffect(() => {
+    console.log('🔍 SSE状态变化:', { isStreaming, isConnected, isWaitingResponse });
+    
     if (!isStreaming && !isConnected) {
       console.log('✅ SSE连接已结束，关闭所有loading状态');
       setIsWaitingResponse(false);
     }
-  }, [isStreaming, isConnected]);
+  }, [isStreaming, isConnected, isWaitingResponse]);
 
   // 智能滚动控制
   const scrollToBottom = useCallback(() => {
@@ -456,7 +468,6 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
 
   // 处理场景选择
   const handleScenarioSelect = (configId: string, configName: string) => {
-
     setSelectedConfigId(configId);
     setSelectedConfigName(configName);
     
@@ -469,13 +480,13 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
       });
     };
     
-    const email = 'yang1001yk@gmail.com';
     const uuid = generateUUID();
-    const newThreadId = `${email}_${uuid}_${configId}`;
+    const newThreadId = `${username}_${uuid}_${configId}`;
     setUniqueThreadId(newThreadId);
     
     console.log('切换场景，生成新的 thread_id:', newThreadId);
     console.log('选择场景:', configId, configName);
+    console.log('当前用户:', username);
     
     // 通知父组件 thread_id 变化
     if (onThreadIdChange) {

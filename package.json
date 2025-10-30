@@ -25,7 +25,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "REACT_APP_KAFLOW_URL=https://iaas-ops-agent.pyinfra.work react-scripts start",
+    "start": "REACT_APP_KAFLOW_URL=http://localhost:8101 react-scripts start",
     "build": "REACT_APP_KAFLOW_URL=https://iaas-ops-agent.pyinfra.work react-scripts build",
     "test": "REACT_APP_KAFLOW_URL=https://iaas-ops-agent.pyinfra.work react-scripts test",
     "eject": "REACT_APP_KAFLOW_URL=https://iaas-ops-agent.pyinfra.work react-scripts eject"  

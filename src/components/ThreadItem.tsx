@@ -1,5 +1,7 @@
 import React from 'react';
 import { Thread } from '../services/threadService';
+import { getConfigFromURL } from '../utils/urlParams';
+const isRootUser = getConfigFromURL().root || false;
 
 interface ThreadItemProps {
   thread: Thread;
@@ -86,6 +88,13 @@ const ThreadItem: React.FC<ThreadItemProps> = ({ thread, isActive, onClick, conf
         <div className="thread-item-title">
           {truncateText(thread.first_message)}
         </div>
+        
+        {/* Root 用户模式下显示用户名 */}
+        {isRootUser && thread.username && (
+          <div className="thread-item-username">
+            @{thread.username}
+          </div>
+        )}
       </div>
 
       {/* 激活状态指示器 */}

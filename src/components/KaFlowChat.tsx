@@ -36,6 +36,7 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
   const [historyPage, setHistoryPage] = useState(1); // 历史消息页码
   const [hasMoreHistory, setHasMoreHistory] = useState(true); // 是否还有更多历史
   const [isLoadingMoreHistory, setIsLoadingMoreHistory] = useState(false); // 加载更多历史
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false); // 是否需要滚动到底部
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -267,6 +268,9 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
           setHasLoadedHistory(true);
           
           console.log(`历史消息加载完成，共 ${historyMessages.length} 条，第 ${response.page}/${response.total_pages} 页`);
+          
+          // 标记需要滚动到底部
+          setShouldScrollToBottom(true);
         } else {
           setHasLoadedHistory(true);
           setHasMoreHistory(false);
@@ -355,6 +359,7 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
       setHasLoadedHistory(false);
       setHistoryPage(1);
       setHasMoreHistory(true);
+      setShouldScrollToBottom(false); // 重置滚动标志
       loadHistoryMessages(currentThreadId);
     } else if (currentThreadId && !shouldLoadHistory) {
       console.log('🆕 新会话，清空聊天区域:', currentThreadId);
@@ -364,6 +369,7 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
       setHasLoadedHistory(false);
       setHistoryPage(1);
       setHasMoreHistory(true);
+      setShouldScrollToBottom(false); // 重置滚动标志
       lastMessageCountRef.current = 0;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -405,11 +411,31 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
   }, [isStreaming, isConnected, isWaitingResponse]);
 
   // 智能滚动控制
-  const scrollToBottom = useCallback(() => {
-    if (isAutoScrollEnabled && !isUserScrolling) {
+  const scrollToBottom = useCallback((immediate = false) => {
+    if (immediate) {
+      // 立即滚动到底部（不使用动画）- 直接设置 scrollTop
+      if (messagesContainerRef.current && messagesEndRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+    } else if (isAutoScrollEnabled && !isUserScrolling) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [isAutoScrollEnabled, isUserScrolling]);
+
+  // 监听 shouldScrollToBottom 状态，立即滚动到底部
+  useEffect(() => {
+    if (shouldScrollToBottom && !isLoadingHistory) {
+      console.log('📍 历史消息加载完成，立即滚动到底部（无动画）');
+      
+      // 使用 requestAnimationFrame 确保 DOM 已更新，然后立即滚动
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollToBottom(true);
+          setShouldScrollToBottom(false); // 重置标志
+        });
+      });
+    }
+  }, [shouldScrollToBottom, isLoadingHistory, scrollToBottom]);
 
   // 监听用户滚动行为
   const handleScroll = useCallback(() => {
@@ -504,6 +530,7 @@ const KaFlowChat: React.FC<KaFlowChatProps> = ({
     setHasLoadedHistory(false); // 重置已加载标记
     setHistoryPage(1); // 重置分页
     setHasMoreHistory(true); // 重置是否还有更多
+    setShouldScrollToBottom(false); // 重置滚动标志
     console.log('✅ 已清空消息历史和所有loading状态');
   };
 

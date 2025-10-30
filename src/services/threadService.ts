@@ -3,11 +3,11 @@
  * 负责与后端会话相关 API 交互
  */
 
-import { getApiUrl } from '../utils/urlParams';
+import { getApiUrl, getConfigFromURL } from '../utils/urlParams';
 
 // 基础 URL，优先从 URL 参数获取，其次环境变量
 const getBaseUrl = () => getApiUrl();
-
+const isRootUser = getConfigFromURL().root || false;
 /**
  * 会话线程信息
  */
@@ -101,17 +101,19 @@ export interface GetHistoryResponse {
 export const fetchThreads = async (request: GetThreadsRequest): Promise<GetThreadsResponse> => {
   try {
     const baseUrl = getBaseUrl();
+    const body = JSON.stringify({
+      username: isRootUser ? undefined : request.username,
+      page: request.page || 1,
+      page_size: request.page_size || 10,
+      order: request.order || 'desc',
+    });
+    console.log('url: ', `${baseUrl}/api/chat/threads`, 'body: ', body);
     const response = await fetch(`${baseUrl}/api/chat/threads`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        username: request.username,
-        page: request.page || 1,
-        page_size: request.page_size || 10,
-        order: request.order || 'desc',
-      }),
+      body
     });
 
     if (!response.ok) {

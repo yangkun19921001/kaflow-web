@@ -10,6 +10,7 @@ export interface URLConfig {
   hideSidebar?: boolean;
   appTitle?: string;
   theme?: 'light' | 'dark';
+  root?: boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ export function getConfigFromURL(): URLConfig {
     apiUrl: params.get('apiUrl') || undefined,
     hideHeader: params.get('hideHeader') === 'true',
     hideSidebar: params.get('hideSidebar') === 'true',
+    root: params.get('root') === 'true',//是否是管理用户
     theme: (params.get('theme') as 'light' | 'dark') || undefined,
   };
 }
